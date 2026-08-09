@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "set-env": "node scripts/set-env.js",
     "postinstall": "node scripts/fetch-fonts.js"
   },
   "license": "UNLICENSED",
