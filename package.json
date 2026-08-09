@@ -1,0 +1,19 @@
+{
+  "name": "orrna-quotation-generator",
+  "version": "1.0.0",
+  "description": "Assembles the full ORRNA JAYA quotation PDF from a generated page 1 plus an approved clause library.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "node scripts/fetch-fonts.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
+    "better-sqlite3": "^13.0.3",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "pdfkit": "^0.19.1"
+  }
+}
