@@ -1,12 +1,31 @@
 <%- include('_head') %>
 <% if (error) { %><div class="err"><%= error %></div><% } %>
-<form class="card" method="post" action="/extract" enctype="multipart/form-data">
+<form class="card" id="uploadForm" method="post" action="/extract" enctype="multipart/form-data">
   <h2>Step 1 — Upload the generated page 1</h2>
   <p style="margin:0 0 14px;color:#556;font-size:14px">Upload the single-page quotation PDF produced by your existing system. Its values are transcribed, then you review everything before the full document is issued.</p>
   <input type="file" name="pdf" accept="application/pdf" required>
   <div class="hint">PDF only, up to 15 MB. Nothing is written into the document that you have not confirmed on the next screen.</div>
-  <p style="margin-top:18px"><button type="submit">Read page 1</button>
+  <p style="margin-top:18px"><button type="submit" id="readBtn">Read page 1</button>
   <a href="/preview.pdf" style="margin-left:14px;font-size:13px">View blank layout preview</a>
   <a href="/quotations" style="margin-left:14px;font-size:13px">Issued quotations</a></p>
+  <div class="busy" id="uploadBusy"><span class="spinner"></span><span>Reading page 1 and transcribing values — this usually takes 10–30 seconds.</span></div>
 </form>
+<script>
+(function () {
+  var form = document.getElementById('uploadForm');
+  var btn = document.getElementById('readBtn');
+  var busy = document.getElementById('uploadBusy');
+  form.addEventListener('submit', function () {
+    if (!form.checkValidity()) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Reading…';
+    busy.classList.add('on');
+  });
+  window.addEventListener('pageshow', function () {
+    btn.disabled = false;
+    btn.textContent = 'Read page 1';
+    busy.classList.remove('on');
+  });
+})();
+</script>
 </main></body></html>

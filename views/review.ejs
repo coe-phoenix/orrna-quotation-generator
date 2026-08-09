@@ -2,7 +2,7 @@
 <% (q.warnings || []).forEach(function(w){ %>
   <div class="warn"><strong>Check this:</strong> <%= w %></div>
 <% }) %>
-<form method="post" action="/generate">
+<form method="post" action="/generate" id="reviewForm">
 
   <div class="card">
     <h2>Step 2 — Confirm what was read from page 1</h2>
@@ -45,13 +45,22 @@
   <div class="card">
     <h2>Step 3 — Overview of standardized analyze and action</h2>
     <label>Preset</label>
-    <select name="presetKey">
+    <select name="presetKey" id="presetKey">
       <% presets.forEach(function(p){ %>
         <option value="<%= p.key %>" <%= p.key === q.standardActionsPresetKey ? 'selected' : '' %>>
           <%= p.label %> (<%= p.items.length %> items)
         </option>
       <% }) %>
     </select>
+    <p style="margin:10px 0 0"><a href="#" id="presetToggle" style="font-size:13px">Show what this preset prints</a></p>
+    <% presets.forEach(function(p){ %>
+      <div class="preset-detail" data-preset="<%= p.key %>">
+        <p><%= p.intro %></p>
+        <ol>
+          <% p.items.forEach(function(it){ %><li><%= it %></li><% }) %>
+        </ol>
+      </div>
+    <% }) %>
     <div class="hint">Wording is fixed by the preset. To change it, edit the clause library rather than the quotation.</div>
   </div>
 
@@ -79,7 +88,40 @@
     <div class="hint">General conditions of repair and refurbishment work: version <%= q.boilerplateVersion %>, frozen onto this quotation at issue.</div>
   </div>
 
-  <p><button type="submit">Generate quotation PDF</button>
+  <p><button type="submit" id="generateBtn">Generate quotation PDF</button>
   <a href="/" style="margin-left:16px;font-size:13px">Start over</a></p>
+  <div class="busy" id="generateBusy"><span class="spinner"></span><span>Assembling pages 2 to 6…</span></div>
 </form>
+<script>
+(function () {
+  var sel = document.getElementById('presetKey');
+  var toggle = document.getElementById('presetToggle');
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.preset-detail'));
+  var open = false;
+
+  function sync() {
+    panels.forEach(function (el) {
+      el.classList.toggle('on', open && el.dataset.preset === sel.value);
+    });
+    toggle.textContent = open ? 'Hide preset contents' : 'Show what this preset prints';
+  }
+  toggle.addEventListener('click', function (e) { e.preventDefault(); open = !open; sync(); });
+  sel.addEventListener('change', sync);
+  sync();
+
+  var form = document.getElementById('reviewForm');
+  var btn = document.getElementById('generateBtn');
+  var busy = document.getElementById('generateBusy');
+  form.addEventListener('submit', function () {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Generating…';
+    busy.classList.add('on');
+  });
+  window.addEventListener('pageshow', function () {
+    btn.disabled = false;
+    btn.textContent = 'Generate quotation PDF';
+    busy.classList.remove('on');
+  });
+})();
+</script>
 </main></body></html>

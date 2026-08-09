@@ -99,7 +99,13 @@ function fromForm(b) {
 app.post('/generate', (req, res) => {
   const q = fromForm(req.body);
   const id = saveQuotation(q);
-  res.redirect(`/quotation/${id}.pdf`);
+  res.redirect(`/quotation/${id}/done`);
+});
+
+app.get('/quotation/:id/done', (req, res) => {
+  const row = getQuotation(parseInt(req.params.id, 10));
+  if (!row) return res.status(404).send('Quotation not found');
+  res.render('done', { id: row.id, q: row.snapshot });
 });
 
 app.get('/quotation/:id.pdf', (req, res) => {
@@ -108,7 +114,8 @@ app.get('/quotation/:id.pdf', (req, res) => {
   const q = row.snapshot;
   const name = `Quotation_${(q.quoteNo || row.id).toString().replace(/\W+/g, '_')}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename="${name}"`);
+  const disposition = req.query.download ? 'attachment' : 'inline';
+  res.setHeader('Content-Disposition', `${disposition}; filename="${name}"`);
   renderQuotation(q).pipe(res);
 });
 

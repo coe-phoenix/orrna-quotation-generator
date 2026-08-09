@@ -28,5 +28,20 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#778}
 .hint{font-size:12px;color:#778;margin-top:6px}
 .rowline{display:grid;grid-template-columns:1.4fr 1.4fr 110px;gap:10px;margin-bottom:8px}
 a{color:var(--ink)}
+button[disabled]{opacity:.75;cursor:progress}
+.spinner{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.busy{display:none;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:#556}
+.busy.on{display:flex}
+.busy .spinner{border-color:rgba(23,54,93,.25);border-top-color:var(--ink)}
+.preset-detail{display:none;margin-top:12px;border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:#fbfcfd}
+.preset-detail.on{display:block}
+.preset-detail p{margin:0 0 10px;font-size:13px;color:#556}
+.preset-detail ol{margin:0;padding-left:20px;font-size:13px;color:#243}
+.preset-detail li{margin-bottom:5px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.btn-link{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;border-radius:6px;padding:11px 20px;font:600 14px/1 inherit}
+.btn-link.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.ok{background:#eaf6ec;border:1px solid #b7ddbe;color:#20603a;padding:12px 14px;border-radius:6px;margin-bottom:16px;font-size:14px}
 </style></head><body>
 <header><h1>ORRNA JAYA ENGINEERING &amp; TRADING</h1><p>Quotation Generator — pages 2 to 6 assembled from the approved clause library</p></header><main>
