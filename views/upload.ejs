@@ -1,0 +1,12 @@
+<%- include('_head') %>
+<% if (error) { %><div class="err"><%= error %></div><% } %>
+<form class="card" method="post" action="/extract" enctype="multipart/form-data">
+  <h2>Step 1 — Upload the generated page 1</h2>
+  <p style="margin:0 0 14px;color:#556;font-size:14px">Upload the single-page quotation PDF produced by your existing system. Its values are transcribed, then you review everything before the full document is issued.</p>
+  <input type="file" name="pdf" accept="application/pdf" required>
+  <div class="hint">PDF only, up to 15 MB. Nothing is written into the document that you have not confirmed on the next screen.</div>
+  <p style="margin-top:18px"><button type="submit">Read page 1</button>
+  <a href="/preview.pdf" style="margin-left:14px;font-size:13px">View blank layout preview</a>
+  <a href="/quotations" style="margin-left:14px;font-size:13px">Issued quotations</a></p>
+</form>
+</main></body></html>

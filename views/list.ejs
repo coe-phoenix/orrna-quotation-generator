@@ -1,0 +1,12 @@
+<%- include('_head') %>
+<div class="card"><h2>Issued quotations</h2>
+<% if (!rows.length) { %><p style="color:#778;font-size:14px">Nothing issued yet.</p><% } else { %>
+<table><tr><th>Quote no</th><th>Job no</th><th>Customer</th><th>Issued</th><th>Terms</th><th></th></tr>
+<% rows.forEach(function(r){ %><tr>
+<td><%= r.quote_no || '—' %></td><td><%= r.job_no || '—' %></td><td><%= r.customer_name || '—' %></td>
+<td><%= new Date(r.issued_at).toLocaleString('en-GB') %></td><td><%= r.boilerplate_version %></td>
+<td><a href="/quotation/<%= r.id %>.pdf">Reprint</a></td></tr><% }) %></table>
+<p class="hint">Reprints replay the exact values and terms frozen at issue time.</p>
+<% } %>
+<p style="margin-top:16px"><a href="/">← New quotation</a></p></div>
+</main></body></html>
