@@ -1,0 +1,85 @@
+<%- include('_head') %>
+<% (q.warnings || []).forEach(function(w){ %>
+  <div class="warn"><strong>Check this:</strong> <%= w %></div>
+<% }) %>
+<form method="post" action="/generate">
+
+  <div class="card">
+    <h2>Step 2 — Confirm what was read from page 1</h2>
+    <div class="grid">
+      <div><label>Quote no</label><input type="text" name="quoteNo" value="<%= q.quoteNo %>"></div>
+      <div><label>Job no</label><input type="text" name="jobNo" value="<%= q.jobNo %>"></div>
+      <div><label>Date</label><input type="text" name="date" value="<%= q.date %>"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Attention</label><input type="text" name="attention" value="<%= q.attention %>"></div>
+      <div><label>Customer name</label><input type="text" name="customerName" value="<%= q.customer.name %>"></div>
+    </div>
+    <label>Customer address (one line per row)</label>
+    <textarea name="customerAddress"><%= q.customer.addressLines.join('\n') %></textarea>
+    <div class="hint">Only this address is printed. Anything else found on the page is flagged above, never copied.</div>
+  </div>
+
+  <div class="card">
+    <h2>Cost lines</h2>
+    <% q.costBox.rows.forEach(function(r){ %>
+      <div class="rowline">
+        <input type="text" name="rowLabel" value="<%= r.label %>">
+        <input type="text" name="rowValue" value="<%= r.value || '' %>">
+        <select name="rowMode">
+          <option value="inline" <%= r.mode === 'inline' ? 'selected' : '' %>>Inline</option>
+          <option value="columns" <%= r.mode === 'columns' ? 'selected' : '' %>>Columns</option>
+        </select>
+      </div>
+    <% }) %>
+    <div class="rowline">
+      <input type="text" name="rowLabel" placeholder="Add a line…">
+      <input type="text" name="rowValue" placeholder="Value">
+      <select name="rowMode"><option value="inline">Inline</option><option value="columns">Columns</option></select>
+    </div>
+    <label>Warranty (months) — also sets clause 10.1</label>
+    <input type="number" name="warrantyMonths" min="1" max="36" value="<%= q.warrantyMonths %>" style="max-width:160px">
+    <div class="hint">Page 1 and the warranty clause are driven by this one field, so they cannot disagree.</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 — Overview of standardized analyze and action</h2>
+    <label>Preset</label>
+    <select name="presetKey">
+      <% presets.forEach(function(p){ %>
+        <option value="<%= p.key %>" <%= p.key === q.standardActionsPresetKey ? 'selected' : '' %>>
+          <%= p.label %> (<%= p.items.length %> items)
+        </option>
+      <% }) %>
+    </select>
+    <div class="hint">Wording is fixed by the preset. To change it, edit the clause library rather than the quotation.</div>
+  </div>
+
+  <div class="card">
+    <h2>Others agreed actions</h2>
+    <div class="ticks">
+      <% catalog.forEach(function(a){ %>
+        <label class="tick" style="font-weight:400;text-transform:none">
+          <input type="checkbox" name="tick_<%= a.key %>" <%= q.agreedActions[a.key] ? 'checked' : '' %>>
+          <span><%= a.label %></span>
+        </label>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Conditions</h2>
+    <div class="grid">
+      <div><label>Validity (days)</label><input type="number" name="validityDays" value="<%= q.conditions.validityDays %>"></div>
+      <div><label>Payment terms (days)</label><input type="number" name="paymentTermsDays" value="<%= q.conditions.paymentTermsDays %>"></div>
+      <div><label>Delivery (days)</label><input type="number" name="deliveryDays" value="<%= q.conditions.deliveryDays %>"></div>
+    </div>
+    <label>Other conditions</label>
+    <input type="text" name="otherConditions" value="<%= q.conditions.otherConditions %>">
+    <div class="hint">General conditions of repair and refurbishment work: version <%= q.boilerplateVersion %>, frozen onto this quotation at issue.</div>
+  </div>
+
+  <p><button type="submit">Generate quotation PDF</button>
+  <a href="/" style="margin-left:16px;font-size:13px">Start over</a></p>
+</form>
+</main></body></html>
