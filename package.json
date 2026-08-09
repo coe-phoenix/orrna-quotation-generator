@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "set-env": "node scripts/set-env.js",
+    "healthcheck": "node scripts/healthcheck.js",
     "postinstall": "node scripts/fetch-fonts.js"
   },
   "license": "UNLICENSED",
