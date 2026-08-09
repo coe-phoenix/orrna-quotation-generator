@@ -1,5 +1,7 @@
 'use strict';
 
+require('./src/env');
+
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
