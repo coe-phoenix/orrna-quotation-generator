@@ -246,7 +246,9 @@ function renderConditionsPage(doc, q) {
 }
 
 function renderGeneralConditions(doc, q) {
-  const gc = C.GENERAL_CONDITIONS;
+  const gc = (q.generalConditions && (q.generalConditions.clauses || []).length)
+    ? q.generalConditions
+    : C.GENERAL_CONDITIONS;
   const word = C.warrantyWord(nz(q.warrantyMonths, 6));
   let y = newPage(doc);
 
@@ -282,7 +284,7 @@ function renderGeneralConditions(doc, q) {
   line(doc, C.COMPANY.signOffCity, 70.1, y); y += 12.5;
   doc.moveTo(70.1, y).lineTo(L.marginR, y).lineWidth(0.6).stroke('#000000');
   y += 8;
-  para(doc, gc.closing, 70.1, y, L.contentW);
+  para(doc, gc.closing || C.GENERAL_CONDITIONS.closing, 70.1, y, L.contentW);
 }
 
 function renderQuotation(q) {

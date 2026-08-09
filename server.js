@@ -50,6 +50,7 @@ app.post('/extract', upload.single('pdf'), async (req, res) => {
       catalog: C.AGREED_ACTIONS_CATALOG,
       defaults: C.CONDITIONS_DEFAULTS,
       pleaseNote: C.PLEASE_NOTE,
+      generalConditions: C.GENERAL_CONDITIONS,
     });
   } catch (err) {
     const msg = err.code === 'NO_API_KEY'
@@ -58,6 +59,46 @@ app.post('/extract', upload.single('pdf'), async (req, res) => {
     res.status(500).render('upload', { error: msg });
   }
 });
+
+/** Normalized shape used to detect edits away from the clause library. */
+function gcFingerprint(gc) {
+  return JSON.stringify({
+    title: String(gc.title || '').trim(),
+    closing: String(gc.closing || '').trim(),
+    clauses: (gc.clauses || []).map((c) => ({
+      h: String(c.h || '').trim(),
+      p: (c.p || []).map((s) => String(s).trim()).filter(Boolean),
+    })),
+  });
+}
+
+/**
+ * Read the general conditions back off the review form. Wording is frozen onto
+ * the quote, and any deviation from the library is marked on the version so a
+ * reprint makes clear the terms were hand-edited.
+ */
+function generalConditionsFromForm(b) {
+  const base = C.GENERAL_CONDITIONS;
+  const headings = [].concat(b.gcHeading || []);
+  const bodies = [].concat(b.gcBody || []);
+
+  const clauses = [];
+  headings.forEach((h, i) => {
+    const heading = String(h).trim();
+    const paras = String(bodies[i] || '').split('\n').map((s) => s.trim()).filter(Boolean);
+    if (heading || paras.length) clauses.push({ h: heading, p: paras });
+  });
+
+  const gc = {
+    version: base.version,
+    effectiveFrom: base.effectiveFrom,
+    title: String(b.gcTitle || base.title).trim(),
+    clauses: clauses.length ? clauses : base.clauses,
+    closing: String(b.gcClosing || base.closing).trim(),
+  };
+  if (gcFingerprint(gc) !== gcFingerprint(base)) gc.version = `${base.version} (edited)`;
+  return gc;
+}
 
 /** Build a canonical quotation object from the review form. */
 function fromForm(b) {
@@ -71,6 +112,8 @@ function fromForm(b) {
 
   const ticks = {};
   C.AGREED_ACTIONS_CATALOG.forEach((a) => { ticks[a.key] = b[`tick_${a.key}`] === 'on'; });
+
+  const generalConditions = generalConditionsFromForm(b);
 
   return {
     quoteNo: b.quoteNo || '',
@@ -92,7 +135,8 @@ function fromForm(b) {
       deliveryDays: parseInt(b.deliveryDays, 10) || C.CONDITIONS_DEFAULTS.deliveryDays,
       otherConditions: b.otherConditions || C.CONDITIONS_DEFAULTS.otherConditions,
     },
-    boilerplateVersion: C.GENERAL_CONDITIONS.version,
+    generalConditions,
+    boilerplateVersion: generalConditions.version,
   };
 }
 

@@ -85,8 +85,35 @@
     </div>
     <label>Other conditions</label>
     <input type="text" name="otherConditions" value="<%= q.conditions.otherConditions %>">
-    <div class="hint">General conditions of repair and refurbishment work: version <%= q.boilerplateVersion %>, frozen onto this quotation at issue.</div>
+    <div class="hint">The full wording of those general conditions is in Step 4 below, where it can be read and amended.</div>
   </div>
+
+  <div class="card">
+    <h2>Step 4 — General conditions, repair &amp; refurbishment work</h2>
+    <p style="margin:0;color:#556;font-size:14px">Library version <%= generalConditions.version %>, effective <%= generalConditions.effectiveFrom %>. These clauses print on the final pages. Edit them only for this quotation; the wording you leave here is frozen onto the record.</p>
+    <p style="margin:10px 0 0"><a href="#" id="gcToggle" style="font-size:13px">Show the full wording</a></p>
+
+    <div id="gcPanel" class="gc-panel">
+      <label>Heading</label>
+      <input type="text" name="gcTitle" value="<%= generalConditions.title %>">
+
+      <% generalConditions.clauses.forEach(function(cl, i){ %>
+        <div class="gc-clause">
+          <label>Clause <%= i + 1 %></label>
+          <input type="text" name="gcHeading" value="<%= cl.h %>">
+          <textarea name="gcBody" class="gc-body" rows="3"><%= cl.p.join('\n') %></textarea>
+        </div>
+      <% }) %>
+
+      <label>Closing line</label>
+      <textarea name="gcClosing" class="gc-body" rows="2"><%= generalConditions.closing %></textarea>
+
+      <div class="hint">One paragraph per line. <code>{{warrantyMonthsWord}}</code> in clause 10.1 is replaced with the warranty set in Step 2, so the two can never disagree. Any change marks the terms version as edited on the issued record.</div>
+      <p style="margin:12px 0 0"><a href="#" id="gcReset" style="font-size:13px">Reset to library wording</a></p>
+    </div>
+  </div>
+
+  <script id="gcLibrary" type="application/json"><%- JSON.stringify(generalConditions).replace(/</g, '\\u003c') %></script>
 
   <p><button type="submit" id="generateBtn">Generate quotation PDF</button>
   <a href="/" style="margin-left:16px;font-size:13px">Start over</a></p>
@@ -108,6 +135,40 @@
   toggle.addEventListener('click', function (e) { e.preventDefault(); open = !open; sync(); });
   sel.addEventListener('change', sync);
   sync();
+
+  var gcToggle = document.getElementById('gcToggle');
+  var gcPanel = document.getElementById('gcPanel');
+  var library = JSON.parse(document.getElementById('gcLibrary').textContent);
+
+  function autosize(el) {
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight + 2) + 'px';
+  }
+  function autosizeAll() {
+    Array.prototype.forEach.call(gcPanel.querySelectorAll('.gc-body'), autosize);
+  }
+  gcPanel.addEventListener('input', function (e) {
+    if (e.target.classList.contains('gc-body')) autosize(e.target);
+  });
+  gcToggle.addEventListener('click', function (e) {
+    e.preventDefault();
+    var on = gcPanel.classList.toggle('on');
+    gcToggle.textContent = on ? 'Hide the full wording' : 'Show the full wording';
+    if (on) autosizeAll();
+  });
+  document.getElementById('gcReset').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (!window.confirm('Discard your edits and restore the library wording?')) return;
+    gcPanel.querySelector('[name=gcTitle]').value = library.title;
+    gcPanel.querySelector('[name=gcClosing]').value = library.closing;
+    var heads = gcPanel.querySelectorAll('[name=gcHeading]');
+    var bodies = gcPanel.querySelectorAll('[name=gcBody]');
+    library.clauses.forEach(function (cl, i) {
+      if (heads[i]) heads[i].value = cl.h;
+      if (bodies[i]) bodies[i].value = cl.p.join('\n');
+    });
+    autosizeAll();
+  });
 
   var form = document.getElementById('reviewForm');
   var btn = document.getElementById('generateBtn');

@@ -1,12 +1,15 @@
 <%- include('_head') %>
 <div class="ok"><strong>Quotation issued.</strong> Values and terms are now frozen against this record.</div>
 <div class="card">
-  <h2>Step 4 — Quotation ready</h2>
+  <h2>Step 5 — Quotation ready</h2>
   <table>
     <tr><th>Quote no</th><td><%= q.quoteNo || '—' %></td></tr>
     <tr><th>Job no</th><td><%= q.jobNo || '—' %></td></tr>
     <tr><th>Customer</th><td><%= q.customer.name || '—' %></td></tr>
     <tr><th>Terms version</th><td><%= q.boilerplateVersion %></td></tr>
+    <% if (String(q.boilerplateVersion).indexOf('edited') !== -1) { %>
+      <tr><th>Note</th><td>The general conditions were amended by hand on this quotation.</td></tr>
+    <% } %>
   </table>
   <div class="actions">
     <a class="btn-link" href="/quotation/<%= id %>.pdf?download=1">Download PDF</a>
