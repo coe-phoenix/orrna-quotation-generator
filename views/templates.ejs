@@ -30,22 +30,30 @@
     </h2>
     <p class="lead">These presets appear in Step 3 of the quotation. Each preset has an intro line and an ordered list of actions (one per line). The chosen preset's wording prints on page 2.</p>
 
+    <div class="editor-toolbar">
+      <button type="button" class="link-sm" data-expand="presetList">Expand all</button>
+      <button type="button" class="link-sm" data-collapse="presetList">Collapse all</button>
+      <span class="count"><%= presets.length %> preset<%= presets.length === 1 ? '' : 's' %></span>
+    </div>
     <div id="presetList">
       <% presets.forEach(function(p, i){ %>
-        <div class="editor-item" data-repeat>
-          <div class="ei-head">
-            <span class="idx">Preset <%= i + 1 %></span>
+        <div class="editor-item accordion" data-repeat>
+          <div class="ei-head" data-toggle>
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            <span class="ei-title<%= p.label ? '' : ' empty' %>" data-title-for="label"><%= p.label || 'Untitled preset' %></span>
             <span class="grow"></span>
             <button type="button" class="icon-btn remove" title="Remove preset" aria-label="Remove preset">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
           </div>
-          <label>Preset name</label>
-          <input type="text" data-name="label" value="<%= p.label %>" placeholder="e.g. M/T Spindle — Standard Recondition">
-          <label>Intro line</label>
-          <input type="text" data-name="intro" value="<%= p.intro %>">
-          <label>Actions (one per line, printed in order)</label>
-          <textarea data-name="items" rows="7"><%= p.items.join('\n') %></textarea>
+          <div class="ei-body">
+            <label>Preset name</label>
+            <input type="text" data-name="label" value="<%= p.label %>" placeholder="e.g. M/T Spindle — Standard Recondition">
+            <label>Intro line</label>
+            <input type="text" data-name="intro" value="<%= p.intro %>">
+            <label>Actions (one per line, printed in order)</label>
+            <textarea data-name="items" rows="7"><%= p.items.join('\n') %></textarea>
+          </div>
         </div>
       <% }) %>
     </div>
@@ -105,18 +113,26 @@
     <input type="text" name="general[title]" value="<%= generalConditions.title %>">
 
     <label style="margin-top:16px">Clauses</label>
+    <div class="editor-toolbar">
+      <button type="button" class="link-sm" data-expand="clauseList">Expand all</button>
+      <button type="button" class="link-sm" data-collapse="clauseList">Collapse all</button>
+      <span class="count"><%= generalConditions.clauses.length %> clause<%= generalConditions.clauses.length === 1 ? '' : 's' %></span>
+    </div>
     <div id="clauseList">
       <% generalConditions.clauses.forEach(function(cl, i){ %>
-        <div class="editor-item" data-repeat>
-          <div class="ei-head">
-            <span class="idx">Clause <%= i + 1 %></span>
+        <div class="editor-item accordion" data-repeat>
+          <div class="ei-head" data-toggle>
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            <span class="ei-title<%= cl.h ? '' : ' empty' %>" data-title-for="h"><%= cl.h || 'Untitled clause' %></span>
             <span class="grow"></span>
             <button type="button" class="icon-btn remove" title="Remove clause" aria-label="Remove clause">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
           </div>
-          <input type="text" data-name="h" value="<%= cl.h %>" placeholder="Clause heading">
-          <textarea data-name="p" rows="4" placeholder="One paragraph per line"><%= cl.p.join('\n') %></textarea>
+          <div class="ei-body">
+            <input type="text" data-name="h" value="<%= cl.h %>" placeholder="Clause heading">
+            <textarea data-name="p" rows="4" placeholder="One paragraph per line"><%= cl.p.join('\n') %></textarea>
+          </div>
         </div>
       <% }) %>
     </div>
@@ -139,12 +155,16 @@
 
 <!-- clone templates -->
 <template id="tpl-preset">
-  <div class="editor-item" data-repeat>
-    <div class="ei-head"><span class="idx">New preset</span><span class="grow"></span>
+  <div class="editor-item accordion open" data-repeat>
+    <div class="ei-head" data-toggle>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      <span class="ei-title empty" data-title-for="label">Untitled preset</span><span class="grow"></span>
       <button type="button" class="icon-btn remove" title="Remove preset" aria-label="Remove preset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <label>Preset name</label><input type="text" data-name="label" placeholder="Preset name">
-    <label>Intro line</label><input type="text" data-name="intro">
-    <label>Actions (one per line, printed in order)</label><textarea data-name="items" rows="7"></textarea>
+    <div class="ei-body">
+      <label>Preset name</label><input type="text" data-name="label" placeholder="Preset name">
+      <label>Intro line</label><input type="text" data-name="intro">
+      <label>Actions (one per line, printed in order)</label><textarea data-name="items" rows="7"></textarea>
+    </div>
   </div>
 </template>
 <template id="tpl-catalog">
@@ -155,11 +175,15 @@
   </div>
 </template>
 <template id="tpl-clause">
-  <div class="editor-item" data-repeat>
-    <div class="ei-head"><span class="idx">New clause</span><span class="grow"></span>
+  <div class="editor-item accordion open" data-repeat>
+    <div class="ei-head" data-toggle>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      <span class="ei-title empty" data-title-for="h">Untitled clause</span><span class="grow"></span>
       <button type="button" class="icon-btn remove" title="Remove clause" aria-label="Remove clause"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <input type="text" data-name="h" placeholder="Clause heading">
-    <textarea data-name="p" rows="4" placeholder="One paragraph per line"></textarea>
+    <div class="ei-body">
+      <input type="text" data-name="h" placeholder="Clause heading">
+      <textarea data-name="p" rows="4" placeholder="One paragraph per line"></textarea>
+    </div>
   </div>
 </template>
 
@@ -178,9 +202,18 @@
   var initial = (location.hash || '').replace('#', '');
   showTab(['presets', 'catalog', 'general'].indexOf(initial) !== -1 ? initial : 'presets');
 
-  // ---- add / remove repeatable rows ----
+  // ---- add / remove repeatable rows + accordion ----
   var adders = { preset: 'tpl-preset', catalog: 'tpl-catalog', clause: 'tpl-clause' };
   var lists = { preset: 'presetList', catalog: 'catalogList', clause: 'clauseList' };
+  function updateCount(listEl) {
+    if (!listEl) return;
+    var form = listEl.closest('form');
+    var count = form && form.querySelector('.editor-toolbar .count');
+    if (!count) return;
+    var n = listEl.querySelectorAll('[data-repeat]').length;
+    var noun = listEl.id === 'clauseList' ? 'clause' : 'preset';
+    count.textContent = n + ' ' + noun + (n === 1 ? '' : 's');
+  }
   document.addEventListener('click', function (e) {
     var add = e.target.closest && e.target.closest('[data-add]');
     if (add) {
@@ -189,6 +222,7 @@
       var list = document.getElementById(lists[kind]);
       var node = tpl.content.firstElementChild.cloneNode(true);
       list.appendChild(node);
+      updateCount(list);
       var first = node.querySelector('input,textarea');
       if (first) first.focus();
       return;
@@ -196,7 +230,24 @@
     var rm = e.target.closest && e.target.closest('.remove');
     if (rm) {
       var row = rm.closest('[data-repeat]');
-      if (row) row.parentNode.removeChild(row);
+      var parent = row && row.parentNode;
+      if (row) parent.removeChild(row);
+      updateCount(parent);
+      return;
+    }
+    var exp = e.target.closest && e.target.closest('[data-expand]');
+    if (exp) {
+      document.querySelectorAll('#' + exp.dataset.expand + ' .accordion').forEach(function (a) { a.classList.add('open'); });
+      return;
+    }
+    var col = e.target.closest && e.target.closest('[data-collapse]');
+    if (col) {
+      document.querySelectorAll('#' + col.dataset.collapse + ' .accordion').forEach(function (a) { a.classList.remove('open'); });
+      return;
+    }
+    var toggle = e.target.closest && e.target.closest('.accordion > [data-toggle]');
+    if (toggle) {
+      toggle.parentNode.classList.toggle('open');
       return;
     }
     var reset = e.target.closest && e.target.closest('.reset');
@@ -205,6 +256,19 @@
       document.getElementById('resetKind').value = reset.dataset.kind;
       document.getElementById('resetForm').submit();
     }
+  });
+
+  // ---- keep the collapsed header title in sync with the name/heading field ----
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el.dataset || !el.dataset.name) return;
+    var item = el.closest('.accordion');
+    if (!item) return;
+    var title = item.querySelector('.ei-title[data-title-for="' + el.dataset.name + '"]');
+    if (!title) return;
+    var v = el.value.trim();
+    title.textContent = v || (el.dataset.name === 'h' ? 'Untitled clause' : 'Untitled preset');
+    title.classList.toggle('empty', !v);
   });
 
   // ---- reindex names on submit so arrays post cleanly ----

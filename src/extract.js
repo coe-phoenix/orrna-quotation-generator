@@ -4,7 +4,7 @@ const { GoogleGenAI } = require('@google/genai');
 const C = require('./content');
 const T = require('./templates');
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 const SYSTEM = `You transcribe data from an existing quotation PDF into JSON.
 
