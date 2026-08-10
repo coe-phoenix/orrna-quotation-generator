@@ -1,9 +1,10 @@
 'use strict';
 
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
 const C = require('./content');
+const T = require('./templates');
 
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 const SYSTEM = `You transcribe data from an existing quotation PDF into JSON.
 
@@ -37,7 +38,7 @@ cost line explicitly names it):
 {{CATALOG}}`;
 
 function buildSystem() {
-  const cat = C.AGREED_ACTIONS_CATALOG.map((a) => `- ${a.key}: ${a.label}`).join('\n');
+  const cat = T.getCatalog().map((a) => `- ${a.key}: ${a.label}`).join('\n');
   return SYSTEM.replace('{{CATALOG}}', cat);
 }
 
@@ -46,32 +47,33 @@ function stripFences(t) {
 }
 
 async function extractFromPdf(pdfBuffer) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    const e = new Error('ANTHROPIC_API_KEY is not set on the server.');
+    const e = new Error('GEMINI_API_KEY is not set on the server.');
     e.code = 'NO_API_KEY';
     throw e;
   }
 
-  const client = new Anthropic({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
-  const resp = await client.messages.create({
+  const resp = await ai.models.generateContent({
     model: MODEL,
-    max_tokens: 2000,
-    system: buildSystem(),
-    messages: [{
+    contents: [{
       role: 'user',
-      content: [
-        {
-          type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: pdfBuffer.toString('base64') },
-        },
-        { type: 'text', text: 'Transcribe the first page of this quotation into the JSON schema. Return JSON only.' },
+      parts: [
+        { inlineData: { mimeType: 'application/pdf', data: pdfBuffer.toString('base64') } },
+        { text: 'Transcribe the first page of this quotation into the JSON schema. Return JSON only.' },
       ],
     }],
+    config: {
+      systemInstruction: buildSystem(),
+      temperature: 0,
+      maxOutputTokens: 2000,
+      responseMimeType: 'application/json',
+    },
   });
 
-  const text = resp.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+  const text = resp.text || '';
   let data;
   try {
     data = JSON.parse(stripFences(text));
@@ -80,7 +82,7 @@ async function extractFromPdf(pdfBuffer) {
     e.raw = text;
     throw e;
   }
-  return { data, raw: text, usage: resp.usage };
+  return { data, raw: text, usage: resp.usageMetadata };
 }
 
 /** Map extraction output onto the canonical quotation object used by the renderer. */
@@ -91,8 +93,9 @@ function toQuotation(x) {
     value: r.value,
   }));
 
+  const catalog = T.getCatalog();
   const ticks = {};
-  C.AGREED_ACTIONS_CATALOG.forEach((a) => { ticks[a.key] = a.defaultOn; });
+  catalog.forEach((a) => { ticks[a.key] = a.defaultOn; });
   (x.suggestedActions || []).forEach((k) => {
     if (Object.prototype.hasOwnProperty.call(ticks, k)) ticks[k] = true;
   });
@@ -109,10 +112,10 @@ function toQuotation(x) {
     salutation: '',
     costBox: { rows },
     warrantyMonths: x.warrantyMonths || 6,
-    standardActionsPresetKey: C.STANDARD_ACTION_PRESETS[0].key,
+    standardActionsPresetKey: T.getPresets()[0].key,
     agreedActions: ticks,
     conditions: Object.assign({}, C.CONDITIONS_DEFAULTS),
-    boilerplateVersion: C.GENERAL_CONDITIONS.version,
+    boilerplateVersion: T.getGeneralConditions().version,
     warnings: (x.extraAddressesFound || []).length
       ? [`Page 1 contains ${x.extraAddressesFound.length} additional address(es) not in the recipient box: ${x.extraAddressesFound.join(' | ')}`]
       : [],

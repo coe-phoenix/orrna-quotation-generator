@@ -57,4 +57,4 @@ function listQuotations(limit = 100) {
   ).all(limit);
 }
 
-module.exports = { saveQuotation, getQuotation, listQuotations };
+module.exports = { db, saveQuotation, getQuotation, listQuotations };

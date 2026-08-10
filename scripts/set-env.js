@@ -1,7 +1,7 @@
 'use strict';
 
 /* Writes .env from arguments, e.g.
- *   npm run set-env -- ANTHROPIC_API_KEY=sk-...
+ *   npm run set-env -- GEMINI_API_KEY=...
  * Exists because the deploy channel rejects shell redirection and heredocs,
  * so the secret cannot be written with `cat > .env`. Existing keys are
  * preserved unless overwritten. .env is gitignored.

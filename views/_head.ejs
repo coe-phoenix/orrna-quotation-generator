@@ -2,52 +2,180 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ORRNA JAYA — Quotation Generator</title>
 <style>
-:root{--ink:#17365D;--accent:#4F81BD;--line:#d8dee6;--bg:#f6f7f9}
+:root{
+  --ink:#153055;--ink-2:#1f4373;--accent:#4F81BD;--accent-2:#6d9bd3;
+  --line:#e3e8ef;--line-2:#eef2f7;--bg:#eef1f6;--card:#ffffff;
+  --text:#1b2430;--muted:#64748b;--soft:#8593a6;
+  --ok:#1f7a4d;--ok-bg:#e7f6ec;--ok-line:#b6e0c4;
+  --warn:#8a6100;--warn-bg:#fdf5e2;--warn-line:#f0dfa6;
+  --err:#a12a1c;--err-bg:#fdecea;--err-line:#f4c3bc;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 2px rgba(16,32,58,.06),0 8px 24px -12px rgba(16,32,58,.18);
+  --shadow-sm:0 1px 2px rgba(16,32,58,.08);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#1a1a1a;font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif}
-header{background:#fff;border-bottom:3px solid var(--accent);padding:18px 24px}
-header h1{margin:0;font:600 19px/1.2 Georgia,serif;color:var(--ink);letter-spacing:.3px}
-header p{margin:4px 0 0;color:#667;font-size:13px}
-main{max-width:960px;margin:24px auto;padding:0 20px 60px}
-.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;margin-bottom:18px}
-.card h2{margin:0 0 14px;font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink)}
-label{display:block;font-size:12px;font-weight:600;color:#556;margin:10px 0 4px}
-input[type=text],input[type=number],textarea,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:5px;font:inherit;background:#fff}
-textarea{min-height:88px;resize:vertical}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:linear-gradient(180deg,#f3f5f9,#eef1f6 240px);color:var(--text);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(10px);
+  border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1000px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit;min-width:0}
+.brand .mark{flex:none;width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--ink),var(--accent));
+  display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.brand .mark svg{width:22px;height:22px;display:block}
+.brand .name{font:700 15px/1.1 Georgia,"Times New Roman",serif;color:var(--ink);letter-spacing:.2px;white-space:nowrap}
+.brand .sub{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:13.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 13px;border-radius:8px;white-space:nowrap}
+.nav a:hover{color:var(--ink);background:var(--line-2)}
+.nav a.on{color:var(--ink);background:#e7edf6}
+
+main{max-width:1000px;margin:26px auto;padding:0 20px 72px}
+
+/* stepper */
+.steps{display:flex;align-items:center;gap:6px;margin:0 0 22px;flex-wrap:wrap}
+.steps .st{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);font-weight:600}
+.steps .st .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;
+  background:#fff;border:1.5px solid var(--line);color:var(--soft)}
+.steps .st.on{color:var(--ink)}
+.steps .st.on .dot{background:var(--ink);border-color:var(--ink);color:#fff}
+.steps .st.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps .bar{flex:1;min-width:14px;height:2px;background:var(--line);border-radius:2px}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.card>h2{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.9px;color:var(--ink);display:flex;align-items:center;gap:10px}
+.card>h2 .num{flex:none;width:22px;height:22px;border-radius:6px;background:#e7edf6;color:var(--ink);
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+.card .lead{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+.card>h2+.lead{margin-top:10px}
+
+/* forms */
+label{display:block;font-size:12px;font-weight:600;color:#51607a;margin:12px 0 5px;letter-spacing:.2px}
+input[type=text],input[type=number],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);
+  border-radius:var(--radius-sm);font:inherit;background:#fff;color:var(--text);transition:border-color .12s,box-shadow .12s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,129,189,.16)}
+textarea{min-height:84px;resize:vertical;line-height:1.5}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-button{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:11px 20px;font:600 14px/1 inherit;cursor:pointer}
-.ticks{columns:2;column-gap:28px}
-.tick{display:flex;gap:8px;align-items:flex-start;padding:5px 0;break-inside:avoid;font-size:13px}
-.tick input{margin-top:3px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#778}
-.err{background:#fdecea;border:1px solid #f5c2bd;color:#8d2b20;padding:12px 14px;border-radius:6px;margin-bottom:16px;font-size:14px}
-.warn{background:#fff8e1;border:1px solid #f0dca0;color:#7a5d05;padding:12px 14px;border-radius:6px;margin-bottom:16px;font-size:14px}
-.hint{font-size:12px;color:#778;margin-top:6px}
-.rowline{display:grid;grid-template-columns:1.4fr 1.4fr 110px;gap:10px;margin-bottom:8px}
-a{color:var(--ink)}
-button[disabled]{opacity:.75;cursor:progress}
-.spinner{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.hint{font-size:12px;color:var(--soft);margin-top:7px;line-height:1.5}
+code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* buttons */
+.btn,button{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:1px solid transparent;
+  border-radius:9px;padding:10px 18px;font:600 14px/1 inherit;cursor:pointer;text-decoration:none;transition:filter .12s,background .12s,transform .02s}
+.btn:hover,button:hover{filter:brightness(1.08)}
+.btn:active,button:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(135deg,var(--ink),var(--ink-2))}
+.btn.ghost,button.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--line-2);filter:none}
+.btn.sm{padding:7px 12px;font-size:12.5px;border-radius:8px}
+.btn.danger{background:#fff;color:var(--err);border-color:var(--err-line)}
+.btn.danger:hover{background:var(--err-bg);filter:none}
+.btn.link{background:none;color:var(--ink);padding:0;border:0;font-weight:600}
+button[disabled]{opacity:.7;cursor:progress}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:18px}
+a{color:var(--ink-2)}
+
+/* checkbox chips */
+.ticks{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.tick{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:9px;
+  font-size:13.5px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s}
+.tick:hover{border-color:var(--accent-2)}
+.tick:has(input:checked){border-color:var(--accent);background:#f2f7fd}
+.tick input{width:17px;height:17px;accent-color:var(--accent);flex:none;cursor:pointer}
+.tick span{font-weight:500}
+
+/* rows */
+.rowline{display:grid;grid-template-columns:1.4fr 1.4fr 120px;gap:10px;margin-bottom:9px}
+
+/* alerts */
+.alert{padding:13px 15px;border-radius:10px;margin-bottom:18px;font-size:14px;border:1px solid;display:flex;gap:10px;align-items:flex-start}
+.alert svg{flex:none;margin-top:1px}
+.err,.alert.err{background:var(--err-bg);border-color:var(--err-line);color:var(--err)}
+.warn,.alert.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+.ok,.alert.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok)}
+.alert.info{background:#eef4fc;border-color:#cfe0f5;color:var(--ink-2)}
+.err,.warn,.ok{padding:13px 15px;border-radius:10px;margin-bottom:18px;font-size:14px;border:1px solid}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--soft);font-weight:700}
+tbody tr:hover{background:var(--line-2)}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+.badge.custom{background:#eaf1fb;color:var(--ink-2)}
+.badge.default{background:#eef1f5;color:var(--soft)}
+
+/* busy / spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.busy{display:none;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:#556}
+.busy{display:none;align-items:center;gap:10px;margin-top:16px;font-size:13px;color:var(--muted)}
 .busy.on{display:flex}
-.busy .spinner{border-color:rgba(23,54,93,.25);border-top-color:var(--ink)}
-.preset-detail{display:none;margin-top:12px;border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:#fbfcfd}
+.busy .spinner{border-color:rgba(21,48,85,.22);border-top-color:var(--ink)}
+
+/* preset detail + collapsibles */
+.preset-detail{display:none;margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:#fafcff}
 .preset-detail.on{display:block}
-.preset-detail p{margin:0 0 10px;font-size:13px;color:#556}
-.preset-detail ol{margin:0;padding-left:20px;font-size:13px;color:#243}
-.preset-detail li{margin-bottom:5px}
-.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}
-.btn-link{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;border-radius:6px;padding:11px 20px;font:600 14px/1 inherit}
-.btn-link.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
-.gc-panel{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
+.preset-detail p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.preset-detail ol{margin:0;padding-left:20px;font-size:13px;color:#2b3a4d}
+.preset-detail li{margin-bottom:6px}
+.gc-panel{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
 .gc-panel.on{display:block}
-.gc-clause{border-top:1px dashed var(--line);margin-top:14px;padding-top:10px}
+.gc-clause{border-top:1px dashed var(--line);margin-top:14px;padding-top:12px}
 .gc-clause label{color:var(--accent)}
-.gc-body{min-height:0;overflow:hidden;font-size:13px;line-height:1.5}
-code{background:#eef1f5;border-radius:3px;padding:1px 4px;font-size:11px}
-.ok{background:#eaf6ec;border:1px solid #b7ddbe;color:#20603a;padding:12px 14px;border-radius:6px;margin-bottom:16px;font-size:14px}
+.gc-body{min-height:0;overflow:hidden;font-size:13px;line-height:1.55}
+
+/* editor rows (templates page) */
+.editor-item{border:1px solid var(--line);border-radius:11px;padding:16px;margin-bottom:12px;background:#fbfcfe;position:relative}
+.editor-item .ei-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.editor-item .ei-head .idx{font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.5px}
+.editor-item .ei-head .grow{flex:1}
+.catalog-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;border:1px solid var(--line);
+  border-radius:9px;padding:8px 8px 8px 12px;margin-bottom:8px;background:#fff}
+.catalog-row .toggle{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#51607a;white-space:nowrap}
+.catalog-row .toggle input{width:16px;height:16px;accent-color:var(--accent)}
+.icon-btn{background:#fff;border:1px solid var(--line);color:var(--muted);border-radius:8px;width:34px;height:34px;
+  display:grid;place-items:center;cursor:pointer;padding:0}
+.icon-btn:hover{color:var(--err);border-color:var(--err-line);background:var(--err-bg);filter:none}
+.add-row{margin-top:4px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:5px;margin-bottom:20px;box-shadow:var(--shadow-sm);position:sticky;top:64px;z-index:10}
+.tabs a{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;padding:9px 8px;border-radius:8px}
+.tabs a:hover{background:var(--line-2);color:var(--ink)}
+.tabs a.on{background:#e7edf6;color:var(--ink)}
+
+@media (max-width:720px){
+  .grid,.grid2{grid-template-columns:1fr}
+  .ticks{grid-template-columns:1fr}
+  .rowline{grid-template-columns:1fr 1fr;}
+  .rowline select{grid-column:1/-1}
+  .brand .sub{display:none}
+  .nav a{padding:8px 10px}
+}
 </style></head><body>
-<header><h1>ORRNA JAYA ENGINEERING &amp; TRADING</h1><p>Quotation Generator — pages 2 to 6 assembled from the approved clause library</p></header><main>
+<%
+  var active = typeof active !== 'undefined' ? active : '';
+%>
+<header class="topbar"><div class="topbar-in">
+  <a class="brand" href="/">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3.2v3.1M12 17.7v3.1M3.2 12h3.1M17.7 12h3.1M5.8 5.8l2.2 2.2M16 16l2.2 2.2M18.2 5.8L16 8M8 16l-2.2 2.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="3.4" stroke="#fff" stroke-width="1.6"/></svg></span>
+    <span><span class="name">ORRNA JAYA</span><div class="sub">Spindle Service · Quotation Generator</div></span>
+  </a>
+  <nav class="nav">
+    <a href="/" class="<%= active==='upload'?'on':'' %>">New quotation</a>
+    <a href="/quotations" class="<%= active==='list'?'on':'' %>">Issued</a>
+    <a href="/templates" class="<%= active==='templates'?'on':'' %>">Templates</a>
+  </nav>
+</div></header><main>

@@ -1,11 +1,18 @@
-<%- include('_head') %>
+<%- include('_head', { active: 'upload' }) %>
+<div class="steps">
+  <span class="st done"><span class="dot">✓</span> Upload</span><span class="bar"></span>
+  <span class="st on"><span class="dot">2</span> Review</span><span class="bar"></span>
+  <span class="st"><span class="dot">3</span> Issue</span>
+</div>
+
 <% (q.warnings || []).forEach(function(w){ %>
-  <div class="warn"><strong>Check this:</strong> <%= w %></div>
+  <div class="alert warn"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.6l8.6 15A1 1 0 0117.7 18H2.3a1 1 0 01-.9-1.5l8.6-15a1 1 0 011.7 0zM10 7a1 1 0 00-1 1v3a1 1 0 102 0V8a1 1 0 00-1-1zm0 8.4a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"/></svg><span><strong>Check this:</strong> <%= w %></span></div>
 <% }) %>
+
 <form method="post" action="/generate" id="reviewForm">
 
   <div class="card">
-    <h2>Step 2 — Confirm what was read from page 1</h2>
+    <h2><span class="num">2</span> Confirm what was read from page 1</h2>
     <div class="grid">
       <div><label>Quote no</label><input type="text" name="quoteNo" value="<%= q.quoteNo %>"></div>
       <div><label>Job no</label><input type="text" name="jobNo" value="<%= q.jobNo %>"></div>
@@ -22,28 +29,29 @@
 
   <div class="card">
     <h2>Cost lines</h2>
-    <% q.costBox.rows.forEach(function(r){ %>
-      <div class="rowline">
-        <input type="text" name="rowLabel" value="<%= r.label %>">
-        <input type="text" name="rowValue" value="<%= r.value || '' %>">
-        <select name="rowMode">
-          <option value="inline" <%= r.mode === 'inline' ? 'selected' : '' %>>Inline</option>
-          <option value="columns" <%= r.mode === 'columns' ? 'selected' : '' %>>Columns</option>
-        </select>
-      </div>
-    <% }) %>
-    <div class="rowline">
-      <input type="text" name="rowLabel" placeholder="Add a line…">
-      <input type="text" name="rowValue" placeholder="Value">
-      <select name="rowMode"><option value="inline">Inline</option><option value="columns">Columns</option></select>
+    <p class="lead">The last three lines print as aligned columns (Total, Service time, Warranty). Everything above prints inline.</p>
+    <div id="rowlines">
+      <% q.costBox.rows.forEach(function(r){ %>
+        <div class="rowline">
+          <input type="text" name="rowLabel" value="<%= r.label %>" placeholder="Label">
+          <input type="text" name="rowValue" value="<%= r.value || '' %>" placeholder="Value">
+          <select name="rowMode">
+            <option value="inline" <%= r.mode === 'inline' ? 'selected' : '' %>>Inline</option>
+            <option value="columns" <%= r.mode === 'columns' ? 'selected' : '' %>>Columns</option>
+          </select>
+        </div>
+      <% }) %>
     </div>
-    <label>Warranty (months) — also sets clause 10.1</label>
+    <button type="button" class="btn ghost sm" id="addRow">+ Add cost line</button>
+
+    <label style="margin-top:18px">Warranty (months) — also sets clause 10.1</label>
     <input type="number" name="warrantyMonths" min="1" max="36" value="<%= q.warrantyMonths %>" style="max-width:160px">
     <div class="hint">Page 1 and the warranty clause are driven by this one field, so they cannot disagree.</div>
   </div>
 
   <div class="card">
-    <h2>Step 3 — Overview of standardized analyze and action</h2>
+    <h2><span class="num">3</span> Overview of standardized analyze and action</h2>
+    <p class="lead">Pick the standardized action set for this quotation. <a href="/templates#presets">Edit or add presets →</a></p>
     <label>Preset</label>
     <select name="presetKey" id="presetKey">
       <% presets.forEach(function(p){ %>
@@ -52,7 +60,7 @@
         </option>
       <% }) %>
     </select>
-    <p style="margin:10px 0 0"><a href="#" id="presetToggle" style="font-size:13px">Show what this preset prints</a></p>
+    <p style="margin:12px 0 0"><a href="#" id="presetToggle" class="btn link" style="font-size:13px">Show what this preset prints</a></p>
     <% presets.forEach(function(p){ %>
       <div class="preset-detail" data-preset="<%= p.key %>">
         <p><%= p.intro %></p>
@@ -61,14 +69,15 @@
         </ol>
       </div>
     <% }) %>
-    <div class="hint">Wording is fixed by the preset. To change it, edit the clause library rather than the quotation.</div>
+    <div class="hint">Wording comes from the saved template. To change it for every future quotation, use <a href="/templates#presets">Templates</a>.</div>
   </div>
 
   <div class="card">
     <h2>Others agreed actions</h2>
+    <p class="lead">Tick the actions included in this job. <a href="/templates#catalog">Edit the action list →</a></p>
     <div class="ticks">
       <% catalog.forEach(function(a){ %>
-        <label class="tick" style="font-weight:400;text-transform:none">
+        <label class="tick">
           <input type="checkbox" name="tick_<%= a.key %>" <%= q.agreedActions[a.key] ? 'checked' : '' %>>
           <span><%= a.label %></span>
         </label>
@@ -85,13 +94,13 @@
     </div>
     <label>Other conditions</label>
     <input type="text" name="otherConditions" value="<%= q.conditions.otherConditions %>">
-    <div class="hint">The full wording of those general conditions is in Step 4 below, where it can be read and amended.</div>
+    <div class="hint">The full wording of these general conditions is in Step 4 below, where it can be read and amended.</div>
   </div>
 
   <div class="card">
-    <h2>Step 4 — General conditions, repair &amp; refurbishment work</h2>
-    <p style="margin:0;color:#556;font-size:14px">Library version <%= generalConditions.version %>, effective <%= generalConditions.effectiveFrom %>. These clauses print on the final pages. Edit them only for this quotation; the wording you leave here is frozen onto the record.</p>
-    <p style="margin:10px 0 0"><a href="#" id="gcToggle" style="font-size:13px">Show the full wording</a></p>
+    <h2><span class="num">4</span> General conditions, repair &amp; refurbishment work</h2>
+    <p class="lead">Template version <strong><%= generalConditions.version %></strong>, effective <%= generalConditions.effectiveFrom %>. These clauses print on the final pages. Edits here apply to <em>this quotation only</em>; to change them everywhere, <a href="/templates#general">save the template →</a></p>
+    <p style="margin:4px 0 0"><a href="#" id="gcToggle" class="btn link" style="font-size:13px">Show the full wording</a></p>
 
     <div id="gcPanel" class="gc-panel">
       <label>Heading</label>
@@ -109,14 +118,16 @@
       <textarea name="gcClosing" class="gc-body" rows="2"><%= generalConditions.closing %></textarea>
 
       <div class="hint">One paragraph per line. <code>{{warrantyMonthsWord}}</code> in clause 10.1 is replaced with the warranty set in Step 2, so the two can never disagree. Any change marks the terms version as edited on the issued record.</div>
-      <p style="margin:12px 0 0"><a href="#" id="gcReset" style="font-size:13px">Reset to library wording</a></p>
+      <p style="margin:12px 0 0"><a href="#" id="gcReset" class="btn link" style="font-size:13px">Reset to template wording</a></p>
     </div>
   </div>
 
   <script id="gcLibrary" type="application/json"><%- JSON.stringify(generalConditions).replace(/</g, '\\u003c') %></script>
 
-  <p><button type="submit" id="generateBtn">Generate quotation PDF</button>
-  <a href="/" style="margin-left:16px;font-size:13px">Start over</a></p>
+  <div class="actions">
+    <button type="submit" class="primary" id="generateBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Generate quotation PDF</button>
+    <a class="btn ghost" href="/">Start over</a>
+  </div>
   <div class="busy" id="generateBusy"><span class="spinner"></span><span>Assembling pages 2 to 6…</span></div>
 </form>
 <script>
@@ -136,17 +147,24 @@
   sel.addEventListener('change', sync);
   sync();
 
+  // add cost line
+  document.getElementById('addRow').addEventListener('click', function () {
+    var box = document.getElementById('rowlines');
+    var div = document.createElement('div');
+    div.className = 'rowline';
+    div.innerHTML = '<input type="text" name="rowLabel" placeholder="Label">' +
+      '<input type="text" name="rowValue" placeholder="Value">' +
+      '<select name="rowMode"><option value="inline">Inline</option><option value="columns">Columns</option></select>';
+    box.appendChild(div);
+    div.querySelector('input').focus();
+  });
+
   var gcToggle = document.getElementById('gcToggle');
   var gcPanel = document.getElementById('gcPanel');
   var library = JSON.parse(document.getElementById('gcLibrary').textContent);
 
-  function autosize(el) {
-    el.style.height = 'auto';
-    el.style.height = (el.scrollHeight + 2) + 'px';
-  }
-  function autosizeAll() {
-    Array.prototype.forEach.call(gcPanel.querySelectorAll('.gc-body'), autosize);
-  }
+  function autosize(el) { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+  function autosizeAll() { Array.prototype.forEach.call(gcPanel.querySelectorAll('.gc-body'), autosize); }
   gcPanel.addEventListener('input', function (e) {
     if (e.target.classList.contains('gc-body')) autosize(e.target);
   });
@@ -158,7 +176,7 @@
   });
   document.getElementById('gcReset').addEventListener('click', function (e) {
     e.preventDefault();
-    if (!window.confirm('Discard your edits and restore the library wording?')) return;
+    if (!window.confirm('Discard your edits and restore the template wording?')) return;
     gcPanel.querySelector('[name=gcTitle]').value = library.title;
     gcPanel.querySelector('[name=gcClosing]').value = library.closing;
     var heads = gcPanel.querySelectorAll('[name=gcHeading]');
@@ -175,7 +193,7 @@
   var busy = document.getElementById('generateBusy');
   form.addEventListener('submit', function () {
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Generating…';
+    btn.innerHTML = '<span class="spinner"></span> Generating…';
     busy.classList.add('on');
   });
   window.addEventListener('pageshow', function () {

@@ -7,6 +7,7 @@ const express = require('express');
 const multer = require('multer');
 
 const C = require('./src/content');
+const T = require('./src/templates');
 const { renderQuotation } = require('./src/render');
 const { extractFromPdf, toQuotation, MODEL } = require('./src/extract');
 const { saveQuotation, getQuotation, listQuotations } = require('./src/db');
@@ -22,16 +23,19 @@ const upload = multer({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: '2mb' }));
 
 /* ----- routes are declared BEFORE express.static so nothing is shadowed ----- */
 
 app.get('/health', (req, res) => {
   res.json({
     ok: true,
+    provider: 'gemini',
     model: MODEL,
-    apiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
-    boilerplateVersion: C.GENERAL_CONDITIONS.version,
-    presets: C.STANDARD_ACTION_PRESETS.map((p) => p.key),
+    apiKeyConfigured: Boolean(process.env.GEMINI_API_KEY),
+    boilerplateVersion: T.getGeneralConditions().version,
+    presets: T.getPresets().map((p) => p.key),
+    templates: T.status(),
   });
 });
 
@@ -46,21 +50,21 @@ app.post('/extract', upload.single('pdf'), async (req, res) => {
     const q = toQuotation(data);
     res.render('review', {
       q,
-      presets: C.STANDARD_ACTION_PRESETS,
-      catalog: C.AGREED_ACTIONS_CATALOG,
+      presets: T.getPresets(),
+      catalog: T.getCatalog(),
       defaults: C.CONDITIONS_DEFAULTS,
       pleaseNote: C.PLEASE_NOTE,
-      generalConditions: C.GENERAL_CONDITIONS,
+      generalConditions: T.getGeneralConditions(),
     });
   } catch (err) {
     const msg = err.code === 'NO_API_KEY'
-      ? 'ANTHROPIC_API_KEY is not configured on the server.'
+      ? 'GEMINI_API_KEY is not configured on the server.'
       : `Extraction failed: ${err.message}`;
     res.status(500).render('upload', { error: msg });
   }
 });
 
-/** Normalized shape used to detect edits away from the clause library. */
+/** Normalized shape used to detect edits away from the saved template. */
 function gcFingerprint(gc) {
   return JSON.stringify({
     title: String(gc.title || '').trim(),
@@ -74,11 +78,11 @@ function gcFingerprint(gc) {
 
 /**
  * Read the general conditions back off the review form. Wording is frozen onto
- * the quote, and any deviation from the library is marked on the version so a
- * reprint makes clear the terms were hand-edited.
+ * the quote, and any deviation from the saved template is marked on the version
+ * so a reprint makes clear the terms were hand-edited.
  */
 function generalConditionsFromForm(b) {
-  const base = C.GENERAL_CONDITIONS;
+  const base = T.getGeneralConditions();
   const headings = [].concat(b.gcHeading || []);
   const bodies = [].concat(b.gcBody || []);
 
@@ -110,10 +114,15 @@ function fromForm(b) {
     if (String(l).trim()) rows.push({ mode: modes[i] || 'inline', label: l, value: values[i] || '' });
   });
 
+  const catalog = T.getCatalog();
   const ticks = {};
-  C.AGREED_ACTIONS_CATALOG.forEach((a) => { ticks[a.key] = b[`tick_${a.key}`] === 'on'; });
+  catalog.forEach((a) => { ticks[a.key] = b[`tick_${a.key}`] === 'on'; });
 
   const generalConditions = generalConditionsFromForm(b);
+
+  const presets = T.getPresets();
+  const presetKey = b.presetKey || presets[0].key;
+  const preset = presets.find((p) => p.key === presetKey) || presets[0];
 
   return {
     quoteNo: b.quoteNo || '',
@@ -127,8 +136,12 @@ function fromForm(b) {
     salutation: '',
     costBox: { rows },
     warrantyMonths: parseInt(b.warrantyMonths, 10) || 6,
-    standardActionsPresetKey: b.presetKey || C.STANDARD_ACTION_PRESETS[0].key,
+    standardActionsPresetKey: preset.key,
+    // Freeze the resolved wording onto the record so a later template edit
+    // never rewrites an already-issued quotation.
+    standardActions: { intro: preset.intro, items: preset.items },
     agreedActions: ticks,
+    agreedActionsCatalog: catalog.map((a) => ({ key: a.key, label: a.label, defaultOn: a.defaultOn })),
     conditions: {
       validityDays: parseInt(b.validityDays, 10) || C.CONDITIONS_DEFAULTS.validityDays,
       paymentTermsDays: parseInt(b.paymentTermsDays, 10) || C.CONDITIONS_DEFAULTS.paymentTermsDays,
@@ -167,8 +180,69 @@ app.get('/quotations', (req, res) => {
   res.render('list', { rows: listQuotations() });
 });
 
+/* --------------------------- template management --------------------------- */
+
+app.get('/templates', (req, res) => {
+  res.render('templates', {
+    presets: T.getPresets(),
+    catalog: T.getCatalog(),
+    generalConditions: T.getGeneralConditions(),
+    status: T.status(),
+    saved: req.query.saved || null,
+    reset: req.query.reset || null,
+    error: null,
+  });
+});
+
+/** Shared handler for the three save endpoints. Accepts JSON or form posts. */
+function renderTemplates(res, extra) {
+  res.render('templates', Object.assign({
+    presets: T.getPresets(),
+    catalog: T.getCatalog(),
+    generalConditions: T.getGeneralConditions(),
+    status: T.status(),
+    saved: null,
+    reset: null,
+    error: null,
+  }, extra));
+}
+
+app.post('/templates/presets', (req, res) => {
+  try {
+    T.savePresets(req.body.presets);
+    res.redirect('/templates?saved=presets#presets');
+  } catch (err) {
+    renderTemplates(res.status(400), { error: `Could not save presets: ${err.message}` });
+  }
+});
+
+app.post('/templates/catalog', (req, res) => {
+  try {
+    T.saveCatalog(req.body.catalog);
+    res.redirect('/templates?saved=catalog#catalog');
+  } catch (err) {
+    renderTemplates(res.status(400), { error: `Could not save agreed actions: ${err.message}` });
+  }
+});
+
+app.post('/templates/general', (req, res) => {
+  try {
+    T.saveGeneralConditions(req.body.general);
+    res.redirect('/templates?saved=general#general');
+  } catch (err) {
+    renderTemplates(res.status(400), { error: `Could not save general conditions: ${err.message}` });
+  }
+});
+
+app.post('/templates/reset', (req, res) => {
+  const kind = req.body.kind;
+  T.reset(kind);
+  res.redirect(`/templates?reset=${encodeURIComponent(kind || '')}#${kind || ''}`);
+});
+
 /** Preview using reference values, so layout can be checked without an upload. */
 app.get('/preview.pdf', (req, res) => {
+  const preset = T.getPresets()[0];
   res.setHeader('Content-Type', 'application/pdf');
   renderQuotation({
     quoteNo: 'PREVIEW/0000', jobNo: 'PREVIEW/0000',
@@ -183,8 +257,11 @@ app.get('/preview.pdf', (req, res) => {
       { mode: 'columns', label: 'Warranty', value: '6 months' },
     ] },
     warrantyMonths: 6,
-    standardActionsPresetKey: C.STANDARD_ACTION_PRESETS[0].key,
+    standardActionsPresetKey: preset.key,
+    standardActions: { intro: preset.intro, items: preset.items },
     agreedActions: {},
+    agreedActionsCatalog: T.getCatalog(),
+    generalConditions: T.getGeneralConditions(),
   }).pipe(res);
 });
 

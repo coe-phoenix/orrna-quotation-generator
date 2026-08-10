@@ -198,7 +198,10 @@ function renderActionsPage(doc, q, preset) {
 
   y += 21.9;
   const ticks = q.agreedActions || {};
-  C.AGREED_ACTIONS_CATALOG.forEach((a) => {
+  const catalog = (q.agreedActionsCatalog && q.agreedActionsCatalog.length)
+    ? q.agreedActionsCatalog
+    : C.AGREED_ACTIONS_CATALOG;
+  catalog.forEach((a) => {
     const on = Object.prototype.hasOwnProperty.call(ticks, a.key) ? !!ticks[a.key] : a.defaultOn;
     if (on) {
       doc.rect(91.3, y + 0.6, 7.8, 7.8).fill('#000000');
@@ -288,8 +291,11 @@ function renderGeneralConditions(doc, q) {
 }
 
 function renderQuotation(q) {
-  const preset = C.STANDARD_ACTION_PRESETS
-    .find((p) => p.key === q.standardActionsPresetKey) || C.STANDARD_ACTION_PRESETS[0];
+  // Prefer the wording frozen onto the record; fall back to the shipped library
+  // only for legacy snapshots issued before presets were frozen.
+  const preset = (q.standardActions && (q.standardActions.items || []).length)
+    ? q.standardActions
+    : (C.STANDARD_ACTION_PRESETS.find((p) => p.key === q.standardActionsPresetKey) || C.STANDARD_ACTION_PRESETS[0]);
 
   const doc = new PDFDocument({
     size: [L.pageW, L.pageH],

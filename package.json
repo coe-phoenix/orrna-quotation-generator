@@ -11,7 +11,7 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.116.0",
+    "@google/genai": "^2.16.0",
     "better-sqlite3": "^13.0.3",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
