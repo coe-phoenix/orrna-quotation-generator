@@ -68,18 +68,38 @@ async function extractFromPdf(pdfBuffer) {
     config: {
       systemInstruction: buildSystem(),
       temperature: 0,
-      maxOutputTokens: 2000,
+      // This model spends "thinking" tokens against the output budget. At 2000 the
+      // reasoning on a full PDF page starved the JSON and returned an empty body
+      // (MAX_TOKENS). 8192 leaves room for thoughts + the transcription. Note:
+      // thinkingBudget:0 is rejected by this model (400), so we don't disable it.
+      maxOutputTokens: 8192,
       responseMimeType: 'application/json',
     },
   });
 
-  const text = resp.text || '';
+  const finishReason = resp.candidates && resp.candidates[0] && resp.candidates[0].finishReason;
+  const blockReason = resp.promptFeedback && resp.promptFeedback.blockReason;
+  const text = (resp.text || '').trim();
+
+  if (!text) {
+    // No body came back. Say WHY, instead of a generic JSON error.
+    let why = 'the model returned an empty response';
+    if (blockReason) why = `the request was blocked (${blockReason})`;
+    else if (finishReason === 'MAX_TOKENS') why = 'the output was cut off before any JSON was written (MAX_TOKENS) — raise maxOutputTokens or disable thinking';
+    else if (finishReason && finishReason !== 'STOP') why = `the model stopped early (${finishReason})`;
+    const e = new Error(`Model returned no output: ${why}.`);
+    e.finishReason = finishReason;
+    e.usage = resp.usageMetadata;
+    throw e;
+  }
+
   let data;
   try {
     data = JSON.parse(stripFences(text));
   } catch (err) {
-    const e = new Error('Model did not return valid JSON.');
+    const e = new Error(`Model did not return valid JSON (finishReason: ${finishReason || 'unknown'}). First 200 chars: ${text.slice(0, 200)}`);
     e.raw = text;
+    e.finishReason = finishReason;
     throw e;
   }
   return { data, raw: text, usage: resp.usageMetadata };
